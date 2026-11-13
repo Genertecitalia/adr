@@ -103,8 +103,9 @@ function ghBox(after){
     m.remove();if(after)after()};
 }
 async function ghSave(){
-  const c=ghCfg();if(!c.token||!c.owner||!c.repo){ghBox(ghSave);return}
-  const st=$('#gs'),btn=$('#sv');st.textContent='保存中…';btn.disabled=true;
+  const st=$('#gs'),btn=$('#sv'),c=ghCfg();
+  if(!c.token||!c.owner||!c.repo){st.textContent='⚠️ 还没有填写 GitHub 设置（用户名、仓库名、Token 都要填），请在弹出的窗口中填写。';ghBox(()=>{if(ghCfg().token)ghSave()});return}
+  st.textContent='保存中…';btn.disabled=true;
   const url=`https://api.github.com/repos/${c.owner}/${c.repo}/contents/${c.path.split('/').map(encodeURIComponent).join('/')}`;
   const H={Authorization:'Bearer '+c.token,Accept:'application/vnd.github+json'};
   let code=0;
@@ -118,13 +119,13 @@ async function ghSave(){
     try{localStorage.removeItem(DRAFT)}catch(e){}
     st.textContent='✅ 已保存到 GitHub。网站约1–2分钟后更新（浏览器可能有缓存，客户可按 Ctrl+F5 刷新）。';
   }catch(e){
-    const hint={401:'Token 无效或已过期',403:'Token 没有该仓库的 Contents 读写权限',404:'仓库名/分支/路径有误，或 Token 没有授权这个仓库',409:'文件刚被别处修改，请再点一次保存',422:'分支或路径有误'}[code]||'网络错误或未知问题';
+    console.error(e);const hint={401:'Token 无效或已过期',403:'Token 没有该仓库的 Contents 读写权限',404:'仓库名/分支/路径有误，或 Token 没有授权这个仓库',409:'文件刚被别处修改，请再点一次保存',422:'分支或路径有误'}[code]||('网络错误或未知问题'+(e&&e.message?' - '+e.message:''));
     st.textContent='❌ 保存失败'+(code?'（'+code+'）':'')+'：'+hint+'。可点“GitHub 设置”检查。';
   }
   btn.disabled=false;
 }
 function showAdmin(){
-  $('#title').textContent='后台管理 / Amministrazione';$('#adm').textContent='退出后台';
+  $('#title').textContent='后台管理 / Amministrazione (v3)';$('#adm').textContent='退出后台';
   app.innerHTML=`<div class="card"><p class="note">修改会先自动存为本机草稿。改完点“💾 保存到网站”，数据会直接写入 GitHub，约1–2分钟后客户刷新即可看到。</p>
   <label>UN 文本前缀 / testo UN<input id="un" value="${esc(data.unText)}"></label></div>
   <div class="card" style="overflow-x:auto"><table><thead><tr><th class="n"></th><th>Articolo</th><th class="n">KG</th><th></th></tr></thead><tbody>
